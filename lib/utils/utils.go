@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"math"
+)
+
 // ToCmdLine convert strings to [][]byte
 func ToCmdLine(cmd ...string) [][]byte {
 	args := make([][]byte, len(cmd))
@@ -51,6 +55,81 @@ func BytesEquals(a []byte, b []byte) bool {
 		bv := b[i]
 		if av != bv {
 			return false
+		}
+	}
+	return true
+}
+
+
+func String2int64(str string, strLen uint, value *int64) bool {
+
+	var pLen uint = 0
+	if strLen == pLen {
+		return false
+	}
+	char := str[pLen]
+	if strLen == 1 && char == '0' {
+		if value != nil {
+			*value = 0
+		}
+		return true
+	}
+
+	negative := false
+
+	if char == '-' {
+		negative = true
+		pLen++
+		if pLen == strLen {
+			return false
+		}
+		char = str[pLen]
+	}
+
+	var tmpValue uint64 = 0
+
+	if char >= '1' && char <= '9' {
+		tmpValue = uint64(char - '0')
+		pLen++
+		char = str[pLen]
+	} else {
+		return false
+	}
+
+	for pLen < strLen && char >= '0' && char <= '9' {
+		if tmpValue > (math.MaxUint64 / 10) {
+			return false
+		}
+		tmpValue *= 10
+
+		if tmpValue > (math.MaxUint64 - uint64(char - '0')) {
+			return false
+		}
+
+		tmpValue += uint64(char - '0')
+		pLen++
+		if pLen < strLen {
+			char = str[pLen]
+		}
+	}
+
+	if pLen < strLen {
+		return false
+	}
+
+	if negative {
+		if tmpValue > (uint64(-(math.MinInt64 + 1)) + 1) {
+			return false
+		}
+		if value != nil {
+			*value = -int64(tmpValue)
+		}
+	} else {
+		if tmpValue > math.MaxInt64 {
+			return false
+		}
+		if value != nil {
+			*value = int64(tmpValue)
 		}
 	}
 	return true
