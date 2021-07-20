@@ -1,7 +1,6 @@
 package list
 
 import (
-	"fmt"
 	"github.com/hdt3213/godis/lib/cmem"
 	"github.com/hdt3213/godis/lib/utils"
 	"math"
@@ -253,11 +252,6 @@ func zipStoreEntryEncoding(p utils.Pointer, encoding byte, rawLen uint32) uint32
 		buf[0] = encoding
 	}
 	cmem.MemCpy(p.Value(), unsafe.Pointer(&buf), uint(length))
-	if rawLen == 26000 {
-		fmt.Println("-----")
-		fmt.Println(p.GetUint8())
-		fmt.Println(p.Offset(1).GetUint32())
-	}
 	return length
 }
 
@@ -281,9 +275,7 @@ func zipStorePrevEntryLength(p utils.Pointer, length uint32) uint32{
 func zipStorePrevEntryLengthLarge(p utils.Pointer, length uint32) uint32{
 	if !p.IsNil() {
 		p.SetUint8(ZipBigPrevLen)
-		fmt.Println(uint(unsafe.Sizeof(length)))
 		p.Offset(1).SetUint32(length)
-		fmt.Println(p.Offset(1).GetUint32())
 	}
 	return 5
 }
@@ -857,12 +849,8 @@ func (list ZipList) insert(p utils.Pointer, str string) ZipList{
 	p.Move(int64(zipStoreEntryEncoding(p, e.encoding, strLen)))
 	if ZipIsStr(e.encoding) {
 		cmem.MemCpy(p.Value(), unsafe.Pointer((*reflect.StringHeader)(unsafe.Pointer(&str)).Data), uint(strLen))
-		fmt.Println(p.GetUint8())
-		fmt.Println(p.Offset(2).GetUint8())
 		tmp := zl.ptr.Offset(int64(offset))
 		e.decode(tmp)
-		fmt.Println(getValue(tmp))
-		fmt.Println(*e)
 	} else {
 		zipSaveInteger(p, value, e.encoding)
 	}

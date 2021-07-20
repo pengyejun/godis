@@ -27,15 +27,8 @@ func TestAll(t *testing.T) {
 	entryValue := getValue(p)
 	fmt.Println(entryValue)
 
-	p = zl.index(502)
-	e.reset()
-	e.decode(p)
-	fmt.Println(*e)
-	entryValue = getValue(p)
-	fmt.Println(entryValue)
-
 	zl = zl.Insert(500, strings.Repeat("abcdefghijklmnopqrstuvwxyz", 10))
-
+	fmt.Println("insert after-----")
 	p = zl.index(499)
 	e.reset()
 	e.decode(p)
@@ -52,42 +45,8 @@ func TestAll(t *testing.T) {
 	e.reset()
 	e.decode(p)
 	fmt.Println(*e)
-	p = zl.index(502)
-	e.reset()
-	e.decode(p)
-	fmt.Println(*e)
 	entryValue = getValue(p)
 	fmt.Println(entryValue)
-	return
-	zl = zl.Insert(500, strings.Repeat("abcdefghijklmnopqrstuvwxyz", 10))
-	zl = zl.Insert(500, "abcdefg")
-	entryValue = getValue(zl.index(503))
-	switch entryValue.(type) {
-	case string:
-		fmt.Println(entryValue.(string))
-	case int64:
-		fmt.Println(entryValue.(int64))
-	default:
-		panic("error type")
-	}
-	entryValue = getValue(zl.index(600))
-	switch entryValue.(type) {
-	case string:
-		fmt.Println(entryValue.(string))
-	case int64:
-		fmt.Println(entryValue.(int64))
-	default:
-		panic("error type")
-	}
-	fmt.Println(zl.zlLen())
-	p = zl.index(0)
-	fmt.Println(p.Addr())
-	zl = zl.Remove(&p)
-	fmt.Println(p.Addr())
-	fmt.Println(zl.zlLen())
-	//time.Sleep(time.Second * 10)
-	runtime.ReadMemStats(&m)
-	fmt.Printf("%d Kb\n",m.Alloc/1024)
 }
 
 type testValue struct {
@@ -149,10 +108,7 @@ func compareValue(testvalue testValue, p utils.Pointer) (bool, string){
 	return true, ""
 }
 
-
-func TestZipList_Add(t *testing.T) {
-	zl := MakeEmptyZipList()
-
+func getAddTestValues() []testValue{
 	v1 := testValue{ZLEntryPrevLen{prevRawLen:0, prevRawLenSize:1}, ZLEntryMeta{lenSize:1, len:8, headerSize:2}, "abcdefgh", false}
 	v2 := testValue{ZLEntryPrevLen{prevRawLen:10, prevRawLenSize:1}, ZLEntryMeta{lenSize:1, len:0, headerSize:2}, "12", true}
 	v3 := testValue{ZLEntryPrevLen{prevRawLen:2, prevRawLenSize:1}, ZLEntryMeta{lenSize:1, len:1, headerSize:2}, "123", true}
@@ -164,86 +120,64 @@ func TestZipList_Add(t *testing.T) {
 		strconv.Itoa(int(math.Pow(2, 31)) - 1), true}
 	v8 := testValue{ZLEntryPrevLen{prevRawLen:6, prevRawLenSize:1}, ZLEntryMeta{lenSize:5, len:26000, headerSize:6}, strings.Repeat("abcdefghijklmnopqrstuvwxyz", 1000), false}
 	v9 := testValue{ZLEntryPrevLen{prevRawLen:26006, prevRawLenSize:5}, ZLEntryMeta{lenSize:1, len:8, headerSize:6}, strconv.Itoa(-int(math.Pow(2, 63))), true}
+	return []testValue{v1, v2, v3, v4, v5, v6, v7, v8, v9}
+}
 
 
-	zl = zl.Add(v1.value)
-	zl = zl.Add(v2.value)
-	zl = zl.Add(v3.value)
-	zl = zl.Add(v4.value)
-	zl = zl.Add(v5.value)
-	zl = zl.Add(v6.value)
-	zl = zl.Add(v7.value)
-	zl = zl.Add(v8.value)
-	zl = zl.Add(v9.value)
+func addAllValue(zl ZipList, testValues []testValue) ZipList{
+	for _, v := range testValues {
+		zl = zl.Add(v.value)
+	}
+	return zl
+}
 
-	p1 := zl.index(0)
+
+func TestZipList_Add(t *testing.T) {
+	zl := MakeEmptyZipList()
+	testValues := getAddTestValues()
+	zl = addAllValue(zl, testValues)
+
+	for i, v := range testValues {
+		p := zl.index(i)
+		ok, str := compareValue(v, p)
+		if !ok {
+			t.Error(str)
+		}
+	}
+}
+
+func TestZipList_Insert(t *testing.T) {
+	zl := MakeEmptyZipList()
+
+	testValues := getAddTestValues()
+	zl = addAllValue(zl, testValues)
+
+	var tmpValue, nextValue testValue
+	tmpValue = testValue{ZLEntryPrevLen{prevRawLenSize:1, prevRawLen:10}, ZLEntryMeta{lenSize:1, len: 10, headerSize:2}, "defghijklk", false}
+	nextValue = testValue{ZLEntryPrevLen{prevRawLenSize:1, prevRawLen:12}, ZLEntryMeta{lenSize:1, len:0, headerSize:2}, "12", true}
+	zl = zl.Insert(1, tmpValue.value)
 	var ok bool
 	var str string
-	ok, str = compareValue(v1, p1)
+
+	ok, str = compareValue(tmpValue, zl.index(1))
 	if !ok {
 		t.Error(str)
 	}
 
-	p2 := zl.index(1)
-	ok, str = compareValue(v2, p2)
-
+	ok, str = compareValue(nextValue, zl.index(2))
 	if !ok {
 		t.Error(str)
 	}
 
-	p3 := zl.index(2)
-	ok, str = compareValue(v3, p3)
-
-	if !ok {
-		t.Error(str)
-	}
-
-	p4 := zl.index(3)
-	ok, str = compareValue(v4, p4)
-
-	if !ok {
-		t.Error(str)
-	}
-
-	p5 := zl.index(4)
-	ok, str = compareValue(v5, p5)
-
-	if !ok {
-		t.Error(str)
-	}
-
-	p6 := zl.index(5)
-	ok, str = compareValue(v6, p6)
-
-	if !ok {
-		t.Error(str)
-	}
-
-	p7 := zl.index(6)
-	ok, str = compareValue(v7, p7)
-
-	if !ok {
-		t.Error(str)
-	}
-
-	p8 := zl.index(7)
-	ok, str = compareValue(v8, p8)
-
-	if !ok {
-		t.Error(str)
-	}
-
-	p9 := zl.index(8)
-	ok, str = compareValue(v9, p9)
-
-	if !ok {
-		t.Error(str)
-	}
+	tmpValue =
 }
 
 func TestZipList_Remove(t *testing.T) {
 	zl := MakeEmptyZipList()
 
-	zl = zl.Insert(ZipListTail, "abcd")
+	testValues := getAddTestValues()
+	zl = addAllValue(zl, testValues)
+	fmt.Println(zl)
+	//zl.Remove()
 
 }
