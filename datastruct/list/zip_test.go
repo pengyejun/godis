@@ -169,7 +169,27 @@ func TestZipList_Insert(t *testing.T) {
 		t.Error(str)
 	}
 
-	tmpValue =
+	tmpValue = testValue{ZLEntryPrevLen{prevRawLen:3, prevRawLenSize:1}, ZLEntryMeta{lenSize:2, len:2600, headerSize:3},
+		strings.Repeat("abcdefghijklmnopqrstuvwxyz", 100), false}
+	zl = zl.Insert(4, tmpValue.value)
+	nextValue = testValue{ZLEntryPrevLen{prevRawLen:2603, prevRawLenSize:5}, ZLEntryMeta{lenSize:2, len:260, headerSize:7},
+		strings.Repeat("abcdefghijklmnopqrstuvwxyz", 10), false}
+	ok, str = compareValue(tmpValue, zl.index(4))
+	if !ok {
+		t.Error(str)
+	}
+
+	ok, str = compareValue(nextValue, zl.index(5))
+	if !ok {
+		t.Error(str)
+	}
+	nextValue = testValue{ZLEntryPrevLen{prevRawLen:267, prevRawLenSize:5}, ZLEntryMeta{lenSize:1, len:3, headerSize:6}, "65535", true}
+
+	ok, str = compareValue(nextValue, zl.index(6))
+	if !ok {
+		t.Error(str)
+	}
+
 }
 
 func TestZipList_Remove(t *testing.T) {
