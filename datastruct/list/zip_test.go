@@ -190,6 +190,22 @@ func TestZipList_Insert(t *testing.T) {
 		t.Error(str)
 	}
 
+	tmpValue = testValue{ZLEntryPrevLen{prevRawLen:26006, prevRawLenSize:5}, ZLEntryMeta{lenSize:1, len:4, headerSize:6},
+		strconv.Itoa(int(math.Pow(2, 31)) - 2), true}
+
+	zl = zl.Insert(10, tmpValue.value)
+
+	nextValue = testValue{ZLEntryPrevLen{prevRawLen:10, prevRawLenSize:1}, ZLEntryMeta{lenSize:1, len:8, headerSize:2}, strconv.Itoa(-int(math.Pow(2, 63))), true}
+
+	ok, str = compareValue(tmpValue, zl.index(10))
+	if !ok {
+		t.Error(str)
+	}
+
+	ok, str = compareValue(nextValue, zl.index(11))
+	if !ok {
+		t.Error(str)
+	}
 }
 
 func TestZipList_Remove(t *testing.T) {
@@ -197,7 +213,42 @@ func TestZipList_Remove(t *testing.T) {
 
 	testValues := getAddTestValues()
 	zl = addAllValue(zl, testValues)
-	fmt.Println(zl)
-	//zl.Remove()
 
+	p := zl.index(1)
+	tmpEntry := ZLEntry{}
+	tmpEntry.decode(p)
+	zl = zl.Remove(&p)
+	testValues = append(testValues[:1], testValues[2:]...)
+	testValues[1].prevRawLenSize = 1
+	testValues[1].prevRawLen = 10
+	for i, v := range testValues {
+		p := zl.index(i)
+		ok, str := compareValue(v, p)
+		if !ok {
+			t.Error(str)
+		}
+	}
+	tmpEntry1 := ZLEntry{}
+	tmpEntry1.decode(p)
+	if tmpEntry == tmpEntry1 {
+		t.Error("modify p data error")
+	}
+
+	p = zl.index(2)
+	tmpEntry = ZLEntry{}
+	tmpEntry.decode(p)
+
+	zl = zl.Remove(&p)
+	testValues = append(testValues[:2], testValues[3:]...)
+	testValues[2].prevRawLenSize = 1
+	testValues[2].prevRawLen = 3
+	testValues[2].headerSize = 2
+	testValues[3].prevRawLen = 5
+	for i, v := range testValues {
+		p := zl.index(i)
+		ok, str := compareValue(v, p)
+		if !ok {
+			t.Error(str)
+		}
+	}
 }
